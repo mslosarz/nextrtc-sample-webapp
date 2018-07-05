@@ -192,17 +192,14 @@
     })
 
     nextRTC.on('created', function (event) {
-      console.log(JSON.stringify(event));
       $('#log').append('<li>Room with id ' + event.content + ' has been created, share it with your friend to start videochat</li>');
     });
 
     nextRTC.on('joined', function (event) {
-      console.log(JSON.stringify(event));
       $('#log').append('<li>You have been joined to conversation ' + event.content + '</li>');
     });
 
     nextRTC.on('newJoined', function (event) {
-      console.log(JSON.stringify(event));
       $('#log').append('<li>Member with id ' + event.from + ' has joined conversation</li>');
     });
 
@@ -221,13 +218,11 @@
 
     nextRTC.on('left', function (event) {
       nextRTC.release(event.from);
-      console.log(JSON.stringify(event));
       $('#' + event.from).remove();
       $('#log').append('<li>' + event.from + " left!</li>");
     });
 
     nextRTC.on('error', function (event) {
-      console.log(JSON.stringify(event));
       $('#log').append('<li>Something goes wrong! ' + event.content + '</li>')
     });
 
@@ -3278,12 +3273,14 @@
           var mid = SDPUtils.getMid(mediaSection) || SDPUtils.generateIdentifier();
 
           // Reject datachannels which are not implemented yet.
-          if ((kind === 'application' && protocol === 'DTLS/SCTP') || rejected) {
+          if (rejected || (kind === 'application' && (protocol === 'DTLS/SCTP' ||
+            protocol === 'UDP/DTLS/SCTP'))) {
             // TODO: this is dangerous in the case where a non-rejected m-line
             //     becomes rejected.
             pc.transceivers[sdpMLineIndex] = {
               mid: mid,
               kind: kind,
+              protocol: protocol,
               rejected: true
             };
             return;
@@ -3909,7 +3906,12 @@
           }
           if (transceiver.rejected) {
             if (transceiver.kind === 'application') {
-              sdp += 'm=application 0 DTLS/SCTP 5000\r\n';
+              if (transceiver.protocol === 'DTLS/SCTP') { // legacy fmt
+                sdp += 'm=application 0 DTLS/SCTP 5000\r\n';
+              } else {
+                sdp += 'm=application 0 ' + transceiver.protocol +
+                  ' webrtc-datachannel\r\n';
+              }
             } else if (transceiver.kind === 'audio') {
               sdp += 'm=audio 0 UDP/TLS/RTP/SAVPF 0\r\n' +
                 'a=rtpmap:0 PCMU/8000\r\n';
@@ -8857,6 +8859,7 @@
       var rsingleTag = ( /^<([a-z][^\/\0>:\x20\t\r\n\f]*)[\x20\t\r\n\f]*\/?>(?:<\/\1>|)$/i );
 
 
+
 // Implement the identical functionality for filter and not
       function winnow(elements, qualifier, not) {
         if (isFunction(qualifier)) {
@@ -9237,6 +9240,7 @@
         };
       });
       var rnothtmlwhite = ( /[^\x20\t\r\n\f]+/g );
+
 
 
 // Convert String-formatted options into Object-formatted ones
@@ -10199,6 +10203,7 @@
       var dataUser = new Data();
 
 
+
 //	Implementation Summary
 //
 //	1. Enforce API surface and semantic compatibility with 1.9.x branch
@@ -10713,6 +10718,7 @@
       var rtagName = ( /<([a-z][^\/\0>\x20\t\r\n\f]+)/i );
 
       var rscriptType = ( /^$|^module$|\/(?:java|ecma)script/i );
+
 
 
 // We have to close these tags to support XHTML (#13200)
@@ -14414,6 +14420,7 @@
       var nonce = Date.now();
 
       var rquery = ( /\?/ );
+
 
 
 // Cross-browser xml parsing
