@@ -15,7 +15,7 @@ window.app = {
     nextRTC.join(convId);
   },
   leaveConversation: function () {
-    $('#container').empty();
+    $('.remotestream').remove();
     nextRTC.leave();
   },
   upperCase: function () {
@@ -46,7 +46,7 @@ var nextRTC = new NextRTC({
 
 nextRTC.on('upperCase', function (event) {
   $('#convId').val(event.content);
-})
+});
 
 nextRTC.on('created', function (event) {
   $('#log').append('<li>Room with id ' + event.content + ' has been created, share it with your friend to start videochat</li>');
@@ -68,7 +68,7 @@ nextRTC.on('localStream', function (stream) {
 });
 
 nextRTC.on('remoteStream', function (stream) {
-  var dest = $("#template").clone().prop({id: stream.member});
+  var dest = $("#template").clone().addClass('remotestream').prop({id: stream.member});
   $("#container").append(dest);
   dest[0].srcObject = stream.stream;
 });
